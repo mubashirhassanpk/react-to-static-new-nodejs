@@ -177,7 +177,7 @@ async def run_build_process(build_id: str, source_dir: Path):
             shutil.rmtree(source_dir)
 
 # Netlify deployment background task
-async def deploy_to_netlify(build_id: str, netlify_token: str, netlify_site_id: str):
+async def deploy_to_netlify(build_id: str, netlify_token: str, netlify_site_id: Optional[str] = None, site_name: Optional[str] = None):
     """Background task to deploy a completed build to Netlify"""
     try:
         # Update status to deploying
@@ -203,14 +203,20 @@ async def deploy_to_netlify(build_id: str, netlify_token: str, netlify_site_id: 
         deployer = NetlifyDeployer(netlify_token)
         
         # Deploy to Netlify
-        logger.info(f"Starting Netlify deployment for build {build_id} to site {netlify_site_id}")
-        result = deployer.deploy_directory(netlify_site_id, str(preview_dir))
+        if netlify_site_id:
+            logger.info(f"Starting Netlify deployment for build {build_id} to existing site {netlify_site_id}")
+        else:
+            logger.info(f"Starting Netlify deployment for build {build_id} - creating new site")
         
-        # Update build with deployment information
+        # Fix: Correct argument order - directory first, then site_id and site_name
+        result = deployer.deploy_directory(str(preview_dir), site_id=netlify_site_id, site_name=site_name)
+        
+        # Update build with deployment information including the site_id
         await db.builds.update_one(
             {"id": build_id},
             {"$set": {
                 "netlify_deploy_id": result['deploy_id'],
+                "netlify_site_id": result['site_id'],
                 "netlify_deploy_status": "deployed",
                 "netlify_deploy_url": result['url'],
                 "netlify_error_message": None
