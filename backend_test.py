@@ -565,6 +565,12 @@ def main():
                 print(f"\n🔧 Testing Netlify endpoints with completed build {upload_build_id[:8]}...")
                 tester.test_build_status_includes_netlify_fields(upload_build_id)
                 tester.test_netlify_status_existing_build(upload_build_id)
+                
+                # Test simplified deployment features
+                print(f"\n🆕 Testing Simplified Deployment with build {upload_build_id[:8]}...")
+                tester.test_netlify_deploy_token_only(upload_build_id)
+                tester.test_netlify_deploy_token_and_site_name(upload_build_id)
+                tester.test_netlify_deploy_missing_token(upload_build_id)
                 tester.test_netlify_deploy_completed_build(upload_build_id)
     
     # Print results
