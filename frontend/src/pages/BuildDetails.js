@@ -18,7 +18,7 @@ export default function BuildDetails() {
   
   // Netlify deployment states
   const [netlifyToken, setNetlifyToken] = useState("");
-  const [netlifySiteId, setNetlifySiteId] = useState("");
+  const [netlifySiteName, setNetlifySiteName] = useState("");
   const [isDeploying, setIsDeploying] = useState(false);
 
   useEffect(() => {
