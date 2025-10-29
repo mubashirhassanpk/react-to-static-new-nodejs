@@ -257,8 +257,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Netlify deployment integration (backend and frontend)"
-    - "GitHub clone endpoint with Vite projects"
+    - "Netlify deployment UI (frontend testing needed)"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
