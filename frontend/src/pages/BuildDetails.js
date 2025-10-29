@@ -51,20 +51,27 @@ export default function BuildDetails() {
   };
 
   const handleNetlifyDeploy = async () => {
-    if (!netlifyToken || !netlifySiteId) {
-      toast.error("Please provide both Netlify token and site ID");
+    if (!netlifyToken) {
+      toast.error("Please provide your Netlify token");
       return;
     }
 
     setIsDeploying(true);
     try {
-      await axios.post(`${API}/build/deploy-netlify/${buildId}`, {
+      const payload = {
         netlify_token: netlifyToken,
-        netlify_site_id: netlifySiteId,
-      });
-      toast.success("Netlify deployment started! Check status below.");
+      };
+      
+      // Only include site_name if provided
+      if (netlifySiteName.trim()) {
+        payload.site_name = netlifySiteName.trim();
+      }
+      
+      await axios.post(`${API}/build/deploy-netlify/${buildId}`, payload);
+      toast.success("Netlify deployment started! A new site will be created automatically.");
       // Clear token for security
       setNetlifyToken("");
+      setNetlifySiteName("");
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to start Netlify deployment");
     } finally {
