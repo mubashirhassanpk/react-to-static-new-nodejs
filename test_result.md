@@ -167,7 +167,7 @@ backend:
     file: "/app/backend/server.py, /app/backend/netlify_deployer.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
@@ -175,6 +175,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ All Netlify deployment endpoints working correctly. POST /api/build/deploy-netlify/{build_id} properly validates build existence and completion status (returns 404 for non-existent builds, 400 for non-completed builds, 200 for completed builds). GET /api/build/netlify-status/{build_id} returns proper status structure. Build model correctly includes all Netlify fields (netlify_deploy_id, netlify_deploy_status, netlify_deploy_url, netlify_error_message). Background deployment task starts correctly and handles Netlify API errors appropriately (404 errors with mock credentials as expected). Error handling works for all edge cases."
+      - working: true
+        agent: "main"
+        comment: "SIMPLIFIED DEPLOYMENT: Made Netlify deployment much easier. Users now only need to provide their Netlify token - site ID is no longer required! The system automatically creates a new Netlify site for each deployment. Added optional site_name field for custom naming. Fixed argument order bug in deploy_directory() call. Backend changes: NetlifyDeployRequest now has optional netlify_site_id and site_name fields. deploy_to_netlify function updated to pass correct arguments. Build model now stores netlify_site_id. Frontend changes: Removed mandatory Site ID input, added optional Site Name input, simplified instructions and validation."
 
   - task: "Build status endpoint"
     implemented: true
