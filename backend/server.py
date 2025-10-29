@@ -455,6 +455,26 @@ async def preview_build(build_id: str, file_path: str):
             media_type = "image/jpeg"
         elif file_path.endswith('.svg'):
             media_type = "image/svg+xml"
+        elif file_path.endswith('.wasm'):
+            media_type = "application/wasm"
+        
+        # For HTML files, rewrite asset paths to work with preview URL structure
+        if file_path.endswith('.html'):
+            with open(file_path_obj, 'r', encoding='utf-8') as f:
+                html_content = f.read()
+            
+            # Rewrite absolute paths to relative paths for preview
+            base_path = f"/api/build/preview/{build_id}/"
+            
+            # Replace common absolute path patterns
+            html_content = html_content.replace('href="/', f'href="{base_path}')
+            html_content = html_content.replace("href='/", f"href='{base_path}")
+            html_content = html_content.replace('src="/', f'src="{base_path}')
+            html_content = html_content.replace("src='/", f"src='{base_path}")
+            
+            # Return modified HTML
+            from fastapi.responses import HTMLResponse
+            return HTMLResponse(content=html_content, media_type="text/html")
         
         return FileResponse(file_path_obj, media_type=media_type)
     
