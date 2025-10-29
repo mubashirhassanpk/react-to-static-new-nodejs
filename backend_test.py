@@ -487,7 +487,23 @@ def main():
         tester.test_netlify_status_existing_build(existing_build_id)
         
         if existing_build_status == 'completed':
-            # Test deployment with completed build
+            # Test simplified deployment scenarios
+            print("\n🆕 Testing Simplified Netlify Deployment Features")
+            print("-" * 50)
+            
+            # Test 1: Deploy with only token (automatic site creation)
+            tester.test_netlify_deploy_token_only(existing_build_id)
+            
+            # Test 2: Deploy with token and site name
+            tester.test_netlify_deploy_token_and_site_name(existing_build_id)
+            
+            # Test 3: Validation - missing token
+            tester.test_netlify_deploy_missing_token(existing_build_id)
+            
+            # Test 4: Validation - empty payload
+            tester.test_netlify_deploy_empty_payload(existing_build_id)
+            
+            # Test 5: Original deployment with site_id (backward compatibility)
             tester.test_netlify_deploy_completed_build(existing_build_id)
             
             # Wait a bit and check status again to see if deployment started
