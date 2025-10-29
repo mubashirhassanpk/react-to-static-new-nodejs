@@ -473,7 +473,6 @@ async def preview_build(build_id: str, file_path: str):
             html_content = html_content.replace("src='/", f"src='{base_path}")
             
             # Return modified HTML
-            from fastapi.responses import HTMLResponse
             return HTMLResponse(content=html_content, media_type="text/html")
         
         return FileResponse(file_path_obj, media_type=media_type)
