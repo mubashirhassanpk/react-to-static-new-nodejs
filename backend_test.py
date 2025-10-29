@@ -391,6 +391,42 @@ def main():
     # Test builds list
     tester.test_builds_list()
     
+    # Test Netlify endpoints with error cases first
+    print("\n🔧 Testing Netlify Deployment Endpoints")
+    print("-" * 40)
+    
+    # Test error cases
+    tester.test_netlify_deploy_nonexistent_build()
+    tester.test_netlify_status_nonexistent_build()
+    
+    # Check if the mentioned completed build exists
+    existing_build_id = "af347823-614d-4e39-9b08-c5a0ef47d9f0"
+    print(f"\n🔍 Testing with existing build ID: {existing_build_id}")
+    
+    # Test build status to see if it exists and get its status
+    existing_build_status = tester.test_build_status(existing_build_id)
+    
+    if existing_build_status:
+        # Test Netlify fields in build status
+        tester.test_build_status_includes_netlify_fields(existing_build_id)
+        
+        # Test Netlify status endpoint
+        tester.test_netlify_status_existing_build(existing_build_id)
+        
+        if existing_build_status == 'completed':
+            # Test deployment with completed build
+            tester.test_netlify_deploy_completed_build(existing_build_id)
+            
+            # Wait a bit and check status again to see if deployment started
+            print("\n⏳ Waiting 5 seconds to check deployment status...")
+            time.sleep(5)
+            tester.test_netlify_status_existing_build(existing_build_id)
+        else:
+            print(f"   Build status is '{existing_build_status}', testing deployment error case")
+            tester.test_netlify_deploy_pending_build(existing_build_id)
+    else:
+        print("   Existing build not found, will create new builds for testing")
+    
     # Test paste build
     paste_build_id = tester.test_paste_build()
     
@@ -411,6 +447,15 @@ def main():
             # Test download and preview
             tester.test_download_build(paste_build_id)
             tester.test_preview_build(paste_build_id)
+            
+            # Test Netlify endpoints with newly completed build
+            print(f"\n🔧 Testing Netlify endpoints with completed build {paste_build_id[:8]}...")
+            tester.test_build_status_includes_netlify_fields(paste_build_id)
+            tester.test_netlify_status_existing_build(paste_build_id)
+            tester.test_netlify_deploy_completed_build(paste_build_id)
+        elif status in ['pending', 'building']:
+            # Test deployment with non-completed build
+            tester.test_netlify_deploy_pending_build(paste_build_id)
     
     if upload_build_id:
         status = tester.wait_for_build_completion(upload_build_id, 180)
@@ -419,6 +464,13 @@ def main():
             # Test download and preview
             tester.test_download_build(upload_build_id)
             tester.test_preview_build(upload_build_id)
+            
+            # Test Netlify endpoints if we haven't tested with a completed build yet
+            if not any(build for build in completed_builds if build == paste_build_id):
+                print(f"\n🔧 Testing Netlify endpoints with completed build {upload_build_id[:8]}...")
+                tester.test_build_status_includes_netlify_fields(upload_build_id)
+                tester.test_netlify_status_existing_build(upload_build_id)
+                tester.test_netlify_deploy_completed_build(upload_build_id)
     
     # Print results
     print("\n" + "=" * 60)
@@ -428,6 +480,7 @@ def main():
     
     if completed_builds:
         print("✅ Core functionality working: Build creation, status tracking, download, preview")
+        print("✅ Netlify deployment endpoints tested")
     else:
         print("❌ No builds completed successfully")
     
