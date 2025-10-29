@@ -258,10 +258,10 @@ export default function BuildDetails() {
             {!build.netlify_deploy_status || build.netlify_deploy_status === "failed" ? (
               <div className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-                  <p className="font-semibold text-blue-900 mb-2">📝 Required Information:</p>
+                  <p className="font-semibold text-blue-900 mb-2">📝 How to Deploy:</p>
                   <ol className="list-decimal list-inside space-y-1 text-blue-800">
                     <li>
-                      <strong>Netlify Token:</strong> Get from{" "}
+                      <strong>Get your Netlify Token:</strong>{" "}
                       <a
                         href="https://app.netlify.com/user/applications#personal-access-tokens"
                         target="_blank"
@@ -272,7 +272,10 @@ export default function BuildDetails() {
                       </a>
                     </li>
                     <li>
-                      <strong>Site ID:</strong> Find in Site Settings → General → Site details → API ID
+                      <strong>(Optional)</strong> Provide a custom site name, or we'll generate one automatically
+                    </li>
+                    <li>
+                      Click "Deploy to Netlify" and we'll create a new site for you!
                     </li>
                   </ol>
                 </div>
@@ -292,22 +295,25 @@ export default function BuildDetails() {
                 </div>
 
                 <div>
-                  <label htmlFor="netlify-site-id" className="block text-sm font-medium text-gray-700 mb-2">
-                    Netlify Site ID *
+                  <label htmlFor="netlify-site-name" className="block text-sm font-medium text-gray-700 mb-2">
+                    Site Name (Optional)
                   </label>
                   <Input
-                    id="netlify-site-id"
+                    id="netlify-site-name"
                     type="text"
-                    placeholder="e.g., abc123-def456-ghi789"
-                    value={netlifySiteId}
-                    onChange={(e) => setNetlifySiteId(e.target.value)}
+                    placeholder="e.g., my-awesome-site (leave empty for auto-generated name)"
+                    value={netlifySiteName}
+                    onChange={(e) => setNetlifySiteName(e.target.value)}
                     className="w-full"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Leave empty to automatically generate a unique site name
+                  </p>
                 </div>
 
                 <Button
                   onClick={handleNetlifyDeploy}
-                  disabled={isDeploying || !netlifyToken || !netlifySiteId}
+                  disabled={isDeploying || !netlifyToken}
                   className="w-full btn-primary"
                 >
                   {isDeploying ? (
