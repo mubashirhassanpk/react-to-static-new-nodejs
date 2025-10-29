@@ -164,11 +164,14 @@ backend:
     file: "/app/backend/server.py, /app/backend/netlify_deployer.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Implemented multi-user Netlify deployment support. Users can provide their own Netlify tokens and site IDs. Uses File Digest method (recommended by Netlify) with automatic retry logic, async deployment support, and SHA1 hash-based file uploads. Added endpoints: POST /api/build/deploy-netlify/{build_id} and GET /api/build/netlify-status/{build_id}"
+      - working: true
+        agent: "testing"
+        comment: "✅ All Netlify deployment endpoints working correctly. POST /api/build/deploy-netlify/{build_id} properly validates build existence and completion status (returns 404 for non-existent builds, 400 for non-completed builds, 200 for completed builds). GET /api/build/netlify-status/{build_id} returns proper status structure. Build model correctly includes all Netlify fields (netlify_deploy_id, netlify_deploy_status, netlify_deploy_url, netlify_error_message). Background deployment task starts correctly and handles Netlify API errors appropriately (404 errors with mock credentials as expected). Error handling works for all edge cases."
 
   - task: "Build status endpoint"
     implemented: true
