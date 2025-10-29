@@ -208,6 +208,124 @@ export default function BuildDetails() {
           )}
         </Card>
 
+        {/* Netlify Deployment Section */}
+        {build.status === "completed" && (
+          <Card className="glass-card p-6 mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Cloud className="w-6 h-6 text-blue-600" />
+              <h2 className="text-2xl font-semibold">Deploy to Netlify</h2>
+            </div>
+
+            {/* Deployment Status */}
+            {build.netlify_deploy_status && (
+              <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  {getNetlifyStatusIcon(build.netlify_deploy_status)}
+                  <p className="font-semibold text-gray-800">
+                    Status: <span className="capitalize">{build.netlify_deploy_status}</span>
+                  </p>
+                </div>
+                {build.netlify_deploy_url && (
+                  <div className="mt-3">
+                    <p className="text-sm text-gray-600 mb-2">🎉 Your site is live!</p>
+                    <a
+                      href={build.netlify_deploy_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      {build.netlify_deploy_url}
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                )}
+                {build.netlify_error_message && (
+                  <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded">
+                    <p className="text-red-800 text-sm">{build.netlify_error_message}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Deployment Form */}
+            {!build.netlify_deploy_status || build.netlify_deploy_status === "failed" ? (
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+                  <p className="font-semibold text-blue-900 mb-2">📝 Required Information:</p>
+                  <ol className="list-decimal list-inside space-y-1 text-blue-800">
+                    <li>
+                      <strong>Netlify Token:</strong> Get from{" "}
+                      <a
+                        href="https://app.netlify.com/user/applications#personal-access-tokens"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline hover:text-blue-600"
+                      >
+                        Netlify Dashboard → User Settings → Applications → Personal Access Tokens
+                      </a>
+                    </li>
+                    <li>
+                      <strong>Site ID:</strong> Find in Site Settings → General → Site details → API ID
+                    </li>
+                  </ol>
+                </div>
+
+                <div>
+                  <label htmlFor="netlify-token" className="block text-sm font-medium text-gray-700 mb-2">
+                    Netlify Access Token *
+                  </label>
+                  <Input
+                    id="netlify-token"
+                    type="password"
+                    placeholder="Enter your Netlify personal access token"
+                    value={netlifyToken}
+                    onChange={(e) => setNetlifyToken(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="netlify-site-id" className="block text-sm font-medium text-gray-700 mb-2">
+                    Netlify Site ID *
+                  </label>
+                  <Input
+                    id="netlify-site-id"
+                    type="text"
+                    placeholder="e.g., abc123-def456-ghi789"
+                    value={netlifySiteId}
+                    onChange={(e) => setNetlifySiteId(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+
+                <Button
+                  onClick={handleNetlifyDeploy}
+                  disabled={isDeploying || !netlifyToken || !netlifySiteId}
+                  className="w-full btn-primary"
+                >
+                  {isDeploying ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Starting Deployment...
+                    </>
+                  ) : (
+                    <>
+                      <Cloud className="w-4 h-4 mr-2" />
+                      Deploy to Netlify
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : build.netlify_deploy_status === "deploying" ? (
+              <div className="text-center py-6">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
+                <p className="text-gray-600">Deployment in progress...</p>
+                <p className="text-sm text-gray-500 mt-2">This may take a few minutes</p>
+              </div>
+            ) : null}
+          </Card>
+        )}
+
         {/* Build Logs */}
         <Card className="glass-card p-6">
           <h2 className="text-2xl font-semibold mb-4">Build Logs</h2>
