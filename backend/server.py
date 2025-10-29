@@ -1,5 +1,5 @@
 from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, BackgroundTasks
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse, HTMLResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
