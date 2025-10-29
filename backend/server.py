@@ -69,7 +69,8 @@ class GithubRepo(BaseModel):
 
 class NetlifyDeployRequest(BaseModel):
     netlify_token: str = Field(description="Netlify personal access token")
-    netlify_site_id: str = Field(description="Netlify site ID")
+    netlify_site_id: Optional[str] = Field(default=None, description="Netlify site ID (optional - will create new site if not provided)")
+    site_name: Optional[str] = Field(default=None, description="Custom site name for new Netlify site (optional)")
 
 # Background build function
 async def run_build_process(build_id: str, source_dir: Path):
