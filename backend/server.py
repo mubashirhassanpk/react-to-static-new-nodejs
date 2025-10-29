@@ -383,12 +383,91 @@ async def github_build(background_tasks: BackgroundTasks, repo_data: GithubRepo)
     source_dir = BUILDS_DIR / f"source_{build_id}"
     source_dir.mkdir(exist_ok=True)
     
-    # Clone GitHub repo
+    # Validate and clone GitHub repo
     try:
-        Repo.clone_from(repo_data.repo_url, source_dir)
+        # First, validate the repository URL format
+        repo_url = repo_data.repo_url.strip()
+        if not repo_url.startswith(('https://github.com/', 'http://github.com/', 'git@github.com:')):
+            shutil.rmtree(source_dir)
+            raise HTTPException(
+                status_code=400, 
+                detail="Invalid GitHub URL. Must be in format: https://github.com/username/repository"
+            )
+        
+        # Try to check if repository exists by making a simple HTTP request
+        import requests
+        # Convert git@ URL to https if needed
+        check_url = repo_url
+        if check_url.startswith('git@github.com:'):
+            check_url = check_url.replace('git@github.com:', 'https://github.com/')
+        if check_url.endswith('.git'):
+            check_url = check_url[:-4]
+        
+        # Check if repository exists
+        try:
+            response = requests.head(check_url, timeout=10, allow_redirects=True)
+            if response.status_code == 404:
+                shutil.rmtree(source_dir)
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Repository not found at {check_url}. Please verify:\n"
+                           "1. The repository URL is correct\n"
+                           "2. The repository exists and is public\n"
+                           "3. The repository owner username is correct"
+                )
+        except requests.RequestException as req_err:
+            # If we can't check, we'll still try to clone
+            print(f"Warning: Could not verify repository existence: {req_err}")
+        
+        # Clone the repository with environment settings to avoid interactive prompts
+        import os
+        env = os.environ.copy()
+        env['GIT_TERMINAL_PROMPT'] = '0'  # Disable git credential prompts
+        
+        # Use git command directly for better control
+        result = subprocess.run(
+            ['git', 'clone', repo_url, str(source_dir)],
+            capture_output=True,
+            text=True,
+            timeout=300,  # 5 minute timeout
+            env=env
+        )
+        
+        if result.returncode != 0:
+            shutil.rmtree(source_dir)
+            error_msg = result.stderr or result.stdout or "Unknown error"
+            
+            # Provide user-friendly error messages
+            if "Repository not found" in error_msg or "not found" in error_msg.lower():
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Repository not found: {repo_url}\n"
+                           "Please check that:\n"
+                           "1. The repository URL is correct\n"
+                           "2. The repository exists and is public\n"
+                           "3. You have spelled the username and repository name correctly"
+                )
+            elif "could not read Username" in error_msg or "Authentication failed" in error_msg:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Repository is private or requires authentication: {repo_url}\n"
+                           "Please ensure the repository is public or contact support for private repository access."
+                )
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Failed to clone repository: {error_msg}"
+                )
+                
+    except HTTPException:
+        raise
     except Exception as e:
-        shutil.rmtree(source_dir)
-        raise HTTPException(status_code=400, detail=f"Failed to clone repository: {str(e)}")
+        if source_dir.exists():
+            shutil.rmtree(source_dir)
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Failed to clone repository: {str(e)}"
+        )
     
     # Create build record
     build = Build(id=build_id, input_type="github", status="pending")
