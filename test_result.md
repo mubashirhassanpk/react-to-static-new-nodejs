@@ -251,6 +251,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Netlify deployment integration (backend and frontend)"
     - "GitHub clone endpoint with Vite projects"
   stuck_tasks: []
   test_all: false
@@ -259,3 +260,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Fixed the build directory detection issue. The system now supports both Create React App projects (which output to 'build' folder) and Vite projects (which output to 'dist' folder). This should resolve the GitHub clone failure for the react-static-magic repository."
+  - agent: "main"
+    message: "Implemented multi-user Netlify deployment feature. Backend now has NetlifyDeployer class that uses the File Digest method (Netlify's recommended approach) with SHA1 hashing, automatic retry logic, and async deployment support. Frontend has a new deployment section on BuildDetails page with input fields for Netlify token and site ID, real-time status updates, and deployed URL display. Users provide their own credentials (no shared token needed)."
