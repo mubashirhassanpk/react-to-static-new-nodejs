@@ -110,10 +110,14 @@ async def run_build_process(build_id: str, source_dir: Path):
         if process.returncode != 0:
             raise Exception(f"npm run build failed: {stderr.decode()}")
         
-        # Check if build directory exists
+        # Check if build directory exists (support both CRA's "build" and Vite's "dist")
         build_dir = source_dir / "build"
         if not build_dir.exists():
-            raise Exception("Build directory not found after build")
+            build_dir = source_dir / "dist"
+            if not build_dir.exists():
+                # List available directories to help debug
+                available_dirs = [d.name for d in source_dir.iterdir() if d.is_dir()]
+                raise Exception(f"Build directory not found after build. Available directories: {', '.join(available_dirs)}")
         
         # Create ZIP file
         output_dir = BUILDS_DIR / build_id
