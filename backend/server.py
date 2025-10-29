@@ -67,6 +67,10 @@ class CodePaste(BaseModel):
 class GithubRepo(BaseModel):
     repo_url: str
 
+class NetlifyDeployRequest(BaseModel):
+    netlify_token: str = Field(description="Netlify personal access token")
+    netlify_site_id: str = Field(description="Netlify site ID")
+
 # Background build function
 async def run_build_process(build_id: str, source_dir: Path):
     try:
