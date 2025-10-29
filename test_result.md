@@ -101,3 +101,137 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: |
+  React to Static Site Builder application that allows users to:
+  - Upload ZIP files containing React projects
+  - Paste React code directly
+  - Clone GitHub repositories
+  Then build them into static sites and provide download/preview functionality.
+
+backend:
+  - task: "Support both Create React App (build) and Vite (dist) output directories"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Fixed build directory detection to check for both 'build' (CRA) and 'dist' (Vite) directories. Added helpful error message listing available directories if neither is found."
+
+  - task: "Upload ZIP file endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Working - accepts ZIP uploads (from iteration 2)"
+
+  - task: "Paste code endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Working - creates builds successfully (from iteration 2)"
+
+  - task: "GitHub clone endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Previously failed with 'Build directory not found after build' for Vite projects. Now fixed to support both build and dist directories."
+
+  - task: "Build status endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Working - returns build status, logs, and completion details (from iteration 2)"
+
+  - task: "Download build endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Working - serves ZIP files with correct headers (from iteration 2)"
+
+  - task: "Preview build endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "Working - serves static HTML files for preview (from iteration 2)"
+
+frontend:
+  - task: "Home page with three input methods"
+    implemented: true
+    working: true
+    file: "/app/frontend/src"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "All three input method tabs working (Upload, Paste, GitHub)"
+
+  - task: "Build details page"
+    implemented: true
+    working: false
+    file: "/app/frontend/src"
+    stuck_count: 1
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "Build details page sometimes redirects to home page instead of staying on build details URL (from iteration 2)"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "GitHub clone endpoint with Vite projects"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Fixed the build directory detection issue. The system now supports both Create React App projects (which output to 'build' folder) and Vite projects (which output to 'dist' folder). This should resolve the GitHub clone failure for the react-static-magic repository."
