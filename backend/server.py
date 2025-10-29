@@ -462,6 +462,45 @@ async def get_builds():
     
     return builds
 
+@api_router.post("/build/deploy-netlify/{build_id}")
+async def deploy_build_to_netlify(build_id: str, request: NetlifyDeployRequest, background_tasks: BackgroundTasks):
+    """Deploy a completed build to Netlify"""
+    # Check if build exists and is completed
+    build = await db.builds.find_one({"id": build_id}, {"_id": 0})
+    if not build:
+        raise HTTPException(status_code=404, detail="Build not found")
+    
+    if build['status'] != 'completed':
+        raise HTTPException(status_code=400, detail="Build must be completed before deploying to Netlify")
+    
+    # Start deployment in background
+    background_tasks.add_task(
+        deploy_to_netlify,
+        build_id,
+        request.netlify_token,
+        request.netlify_site_id
+    )
+    
+    return {
+        "message": "Netlify deployment started",
+        "build_id": build_id
+    }
+
+@api_router.get("/build/netlify-status/{build_id}")
+async def get_netlify_deployment_status(build_id: str):
+    """Get Netlify deployment status for a build"""
+    build = await db.builds.find_one({"id": build_id}, {"_id": 0})
+    if not build:
+        raise HTTPException(status_code=404, detail="Build not found")
+    
+    return {
+        "build_id": build_id,
+        "netlify_deploy_id": build.get('netlify_deploy_id'),
+        "netlify_deploy_status": build.get('netlify_deploy_status'),
+        "netlify_deploy_url": build.get('netlify_deploy_url'),
+        "netlify_error_message": build.get('netlify_error_message')
+    }
+
 # Include the router in the main app
 app.include_router(api_router)
 
