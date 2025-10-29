@@ -45,6 +45,35 @@ class NetlifyDeployer:
         })
         return session
     
+    def create_site(self, site_name: Optional[str] = None) -> Dict:
+        """
+        Create a new Netlify site.
+        Returns site information including site_id.
+        """
+        try:
+            payload = {}
+            if site_name:
+                payload["name"] = site_name
+            
+            response = self.session.post(
+                f"{self.base_url}/sites",
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            site = response.json()
+            logger.info(f"Created new Netlify site: {site['id']} - {site.get('name', 'unnamed')}")
+            return site
+        except requests.exceptions.HTTPError as e:
+            error_msg = f"Failed to create site: {e.response.status_code}"
+            if e.response.text:
+                error_msg += f" - {e.response.text}"
+            logger.error(error_msg)
+            raise NetlifyDeploymentError(error_msg)
+        except Exception as e:
+            logger.error(f"Unexpected error creating site: {str(e)}")
+            raise NetlifyDeploymentError(f"Failed to create site: {str(e)}")
+    
     def compute_file_hashes(self, directory: Path) -> Dict[str, str]:
         """
         Compute SHA1 hashes for all files in a directory.
