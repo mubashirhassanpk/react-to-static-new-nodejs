@@ -485,7 +485,8 @@ async def deploy_build_to_netlify(build_id: str, request: NetlifyDeployRequest, 
         deploy_to_netlify,
         build_id,
         request.netlify_token,
-        request.netlify_site_id
+        request.netlify_site_id,
+        request.site_name
     )
     
     return {
