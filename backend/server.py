@@ -53,6 +53,7 @@ class Build(BaseModel):
     
     # Netlify deployment fields
     netlify_deploy_id: Optional[str] = None
+    netlify_site_id: Optional[str] = None
     netlify_deploy_status: Optional[str] = None  # "deploying", "deployed", "failed"
     netlify_deploy_url: Optional[str] = None
     netlify_error_message: Optional[str] = None
