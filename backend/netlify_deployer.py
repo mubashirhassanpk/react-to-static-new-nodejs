@@ -191,12 +191,72 @@ class NetlifyDeployer:
         
         raise NetlifyDeploymentError(f"Deployment did not become ready within {max_attempts * 2} seconds")
     
-    def deploy_directory(self, site_id: str, directory: str) -> Dict:
+    def deploy_directory(self, directory: str, site_id: Optional[str] = None, site_name: Optional[str] = None) -> Dict:
         """
         Deploy a complete directory to Netlify.
-        Returns deployment information including URL.
+        If site_id is not provided, creates a new site automatically.
+        Returns deployment information including URL and site_id.
         """
         directory_path = Path(directory)
+        
+        # Create new site if no site_id provided
+        if not site_id:
+            logger.info("No site_id provided, creating new Netlify site...")
+            site = self.create_site(site_name)
+            site_id = site['id']
+            logger.info(f"Using new site: {site_id}")
+        
+        # Step 1: Compute hashes for all files
+        logger.info(f"Starting deployment of {directory} to site {site_id}")
+        files_dict = self.compute_file_hashes(directory_path)
+        
+        if not files_dict:
+            raise NetlifyDeploymentError("No files found to deploy")
+        
+        # Step 2: Create deployment manifest
+        deployment = self.create_deployment(site_id, files_dict)
+        deploy_id = deployment['id']
+        
+        # Step 3: Wait for deployment to be ready for uploads (if in preparing state)
+        if deployment.get('state') == 'preparing':
+            logger.info("Waiting for deployment to be ready for uploads...")
+            deployment = self.wait_for_ready_state(deploy_id)
+        
+        # Step 4: Upload required files
+        required_files = deployment.get('required', [])
+        logger.info(f"Need to upload {len(required_files)} files")
+        
+        uploaded = 0
+        failed = 0
+        
+        for file_path in required_files:
+            actual_file_path = directory_path / file_path
+            if actual_file_path.exists():
+                if self.upload_file(deploy_id, actual_file_path, file_path):
+                    uploaded += 1
+                else:
+                    failed += 1
+            else:
+                logger.warning(f"Required file not found: {file_path}")
+                failed += 1
+        
+        logger.info(f"Upload complete: {uploaded} succeeded, {failed} failed")
+        
+        if failed > 0:
+            raise NetlifyDeploymentError(f"Failed to upload {failed} files")
+        
+        # Step 5: Get final deployment status
+        final_deployment = self.get_deployment_status(deploy_id)
+        
+        return {
+            "deploy_id": final_deployment['id'],
+            "site_id": site_id,
+            "state": final_deployment['state'],
+            "url": final_deployment.get('deploy_ssl_url') or final_deployment.get('ssl_url'),
+            "site_name": final_deployment.get('name'),
+            "created_at": final_deployment.get('created_at'),
+            "published_at": final_deployment.get('published_at')
+        }
         
         # Step 1: Compute hashes for all files
         logger.info(f"Starting deployment of {directory} to site {site_id}")
