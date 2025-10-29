@@ -223,21 +223,31 @@ class NetlifyDeployer:
             deployment = self.wait_for_ready_state(deploy_id)
         
         # Step 4: Upload required files
-        required_files = deployment.get('required', [])
-        logger.info(f"Need to upload {len(required_files)} files")
+        # Note: Netlify returns SHA1 hashes in 'required', not file paths
+        # We need to create a reverse mapping from hash to file path
+        required_hashes = deployment.get('required', [])
+        logger.info(f"Need to upload {len(required_hashes)} files")
+        
+        # Create reverse mapping: hash -> file_path
+        hash_to_path = {hash_value: path for path, hash_value in files_dict.items()}
         
         uploaded = 0
         failed = 0
         
-        for file_path in required_files:
-            actual_file_path = directory_path / file_path
-            if actual_file_path.exists():
-                if self.upload_file(deploy_id, actual_file_path, file_path):
-                    uploaded += 1
+        for file_hash in required_hashes:
+            if file_hash in hash_to_path:
+                file_path = hash_to_path[file_hash]
+                actual_file_path = directory_path / file_path
+                if actual_file_path.exists():
+                    if self.upload_file(deploy_id, actual_file_path, file_path):
+                        uploaded += 1
+                    else:
+                        failed += 1
                 else:
+                    logger.warning(f"Required file not found: {file_path} (hash: {file_hash})")
                     failed += 1
             else:
-                logger.warning(f"Required file not found: {file_path}")
+                logger.warning(f"Required hash not in our files: {file_hash}")
                 failed += 1
         
         logger.info(f"Upload complete: {uploaded} succeeded, {failed} failed")
@@ -275,21 +285,31 @@ class NetlifyDeployer:
             deployment = self.wait_for_ready_state(deploy_id)
         
         # Step 4: Upload required files
-        required_files = deployment.get('required', [])
-        logger.info(f"Need to upload {len(required_files)} files")
+        # Note: Netlify returns SHA1 hashes in 'required', not file paths
+        # We need to create a reverse mapping from hash to file path
+        required_hashes = deployment.get('required', [])
+        logger.info(f"Need to upload {len(required_hashes)} files")
+        
+        # Create reverse mapping: hash -> file_path
+        hash_to_path = {hash_value: path for path, hash_value in files_dict.items()}
         
         uploaded = 0
         failed = 0
         
-        for file_path in required_files:
-            actual_file_path = directory_path / file_path
-            if actual_file_path.exists():
-                if self.upload_file(deploy_id, actual_file_path, file_path):
-                    uploaded += 1
+        for file_hash in required_hashes:
+            if file_hash in hash_to_path:
+                file_path = hash_to_path[file_hash]
+                actual_file_path = directory_path / file_path
+                if actual_file_path.exists():
+                    if self.upload_file(deploy_id, actual_file_path, file_path):
+                        uploaded += 1
+                    else:
+                        failed += 1
                 else:
+                    logger.warning(f"Required file not found: {file_path} (hash: {file_hash})")
                     failed += 1
             else:
-                logger.warning(f"Required file not found: {file_path}")
+                logger.warning(f"Required hash not in our files: {file_hash}")
                 failed += 1
         
         logger.info(f"Upload complete: {uploaded} succeeded, {failed} failed")
