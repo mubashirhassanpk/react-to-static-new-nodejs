@@ -317,6 +317,79 @@ export default App;'''
             print(f"   Deployment started for build: {response.get('build_id')}")
         return success
 
+    def test_netlify_deploy_token_only(self, build_id):
+        """Test Netlify deployment with only token (automatic site creation)"""
+        netlify_data = {
+            "netlify_token": "test_token_12345"
+        }
+        
+        success, response = self.run_test(
+            f"Netlify Deploy - Token Only {build_id[:8]}...",
+            "POST",
+            f"build/deploy-netlify/{build_id}",
+            200,
+            data=netlify_data
+        )
+        
+        if success:
+            print(f"   Deployment started for build: {response.get('build_id')}")
+            print(f"   Using automatic site creation")
+        return success
+
+    def test_netlify_deploy_token_and_site_name(self, build_id):
+        """Test Netlify deployment with token and custom site name"""
+        netlify_data = {
+            "netlify_token": "test_token_12345",
+            "site_name": "my-custom-react-site"
+        }
+        
+        success, response = self.run_test(
+            f"Netlify Deploy - Token + Site Name {build_id[:8]}...",
+            "POST",
+            f"build/deploy-netlify/{build_id}",
+            200,
+            data=netlify_data
+        )
+        
+        if success:
+            print(f"   Deployment started for build: {response.get('build_id')}")
+            print(f"   Using custom site name: my-custom-react-site")
+        return success
+
+    def test_netlify_deploy_missing_token(self, build_id):
+        """Test Netlify deployment validation - missing token"""
+        netlify_data = {
+            "site_name": "my-custom-react-site"
+        }
+        
+        success, response = self.run_test(
+            f"Netlify Deploy - Missing Token {build_id[:8]}...",
+            "POST",
+            f"build/deploy-netlify/{build_id}",
+            422,
+            data=netlify_data
+        )
+        
+        if success:
+            print(f"   Validation correctly rejected request without token")
+        return success
+
+    def test_netlify_deploy_empty_payload(self, build_id):
+        """Test Netlify deployment validation - empty payload"""
+        netlify_data = {}
+        
+        success, response = self.run_test(
+            f"Netlify Deploy - Empty Payload {build_id[:8]}...",
+            "POST",
+            f"build/deploy-netlify/{build_id}",
+            422,
+            data=netlify_data
+        )
+        
+        if success:
+            print(f"   Validation correctly rejected empty payload")
+        return success
+
     def test_netlify_status_nonexistent_build(self):
         """Test Netlify status with non-existent build ID"""
         fake_build_id = "nonexistent-build-id"
