@@ -15,6 +15,11 @@ export default function BuildDetails() {
   const navigate = useNavigate();
   const [build, setBuild] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Netlify deployment states
+  const [netlifyToken, setNetlifyToken] = useState("");
+  const [netlifySiteId, setNetlifySiteId] = useState("");
+  const [isDeploying, setIsDeploying] = useState(false);
 
   useEffect(() => {
     fetchBuildStatus();
