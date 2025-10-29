@@ -265,6 +265,118 @@ export default App;'''
         )
         return success
 
+    def test_netlify_deploy_nonexistent_build(self):
+        """Test Netlify deployment with non-existent build ID"""
+        fake_build_id = "nonexistent-build-id"
+        netlify_data = {
+            "netlify_token": "test_token_12345",
+            "netlify_site_id": "test_site_id_67890"
+        }
+        
+        success, response = self.run_test(
+            "Netlify Deploy - Non-existent Build",
+            "POST",
+            f"build/deploy-netlify/{fake_build_id}",
+            404,
+            data=netlify_data
+        )
+        return success
+
+    def test_netlify_deploy_pending_build(self, build_id):
+        """Test Netlify deployment with non-completed build"""
+        netlify_data = {
+            "netlify_token": "test_token_12345",
+            "netlify_site_id": "test_site_id_67890"
+        }
+        
+        success, response = self.run_test(
+            f"Netlify Deploy - Pending Build {build_id[:8]}...",
+            "POST",
+            f"build/deploy-netlify/{build_id}",
+            400,
+            data=netlify_data
+        )
+        return success
+
+    def test_netlify_deploy_completed_build(self, build_id):
+        """Test Netlify deployment with completed build (will fail with mock credentials)"""
+        netlify_data = {
+            "netlify_token": "test_token_12345",
+            "netlify_site_id": "test_site_id_67890"
+        }
+        
+        success, response = self.run_test(
+            f"Netlify Deploy - Completed Build {build_id[:8]}...",
+            "POST",
+            f"build/deploy-netlify/{build_id}",
+            200,
+            data=netlify_data
+        )
+        
+        if success:
+            print(f"   Deployment started for build: {response.get('build_id')}")
+        return success
+
+    def test_netlify_status_nonexistent_build(self):
+        """Test Netlify status with non-existent build ID"""
+        fake_build_id = "nonexistent-build-id"
+        
+        success, response = self.run_test(
+            "Netlify Status - Non-existent Build",
+            "GET",
+            f"build/netlify-status/{fake_build_id}",
+            404
+        )
+        return success
+
+    def test_netlify_status_existing_build(self, build_id):
+        """Test Netlify status endpoint"""
+        success, response = self.run_test(
+            f"Netlify Status - Build {build_id[:8]}...",
+            "GET",
+            f"build/netlify-status/{build_id}",
+            200
+        )
+        
+        if success:
+            print(f"   Deploy ID: {response.get('netlify_deploy_id', 'None')}")
+            print(f"   Deploy Status: {response.get('netlify_deploy_status', 'None')}")
+            print(f"   Deploy URL: {response.get('netlify_deploy_url', 'None')}")
+            if response.get('netlify_error_message'):
+                print(f"   Error: {response.get('netlify_error_message')}")
+        return success
+
+    def test_build_status_includes_netlify_fields(self, build_id):
+        """Test that build status endpoint includes Netlify fields"""
+        success, response = self.run_test(
+            f"Build Status with Netlify Fields {build_id[:8]}...",
+            "GET",
+            f"build/status/{build_id}",
+            200
+        )
+        
+        if success:
+            # Check if Netlify fields are present in the response
+            netlify_fields = [
+                'netlify_deploy_id',
+                'netlify_deploy_status', 
+                'netlify_deploy_url',
+                'netlify_error_message'
+            ]
+            
+            missing_fields = []
+            for field in netlify_fields:
+                if field not in response:
+                    missing_fields.append(field)
+            
+            if missing_fields:
+                print(f"   ❌ Missing Netlify fields: {', '.join(missing_fields)}")
+                return False
+            else:
+                print(f"   ✅ All Netlify fields present in build status")
+                return True
+        return False
+
 def main():
     print("🚀 Starting React to Static Site Builder API Tests")
     print("=" * 60)
