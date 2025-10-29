@@ -50,6 +50,41 @@ export default function BuildDetails() {
     window.open(`${API}/build/preview/${buildId}/index.html`, "_blank");
   };
 
+  const handleNetlifyDeploy = async () => {
+    if (!netlifyToken || !netlifySiteId) {
+      toast.error("Please provide both Netlify token and site ID");
+      return;
+    }
+
+    setIsDeploying(true);
+    try {
+      await axios.post(`${API}/build/deploy-netlify/${buildId}`, {
+        netlify_token: netlifyToken,
+        netlify_site_id: netlifySiteId,
+      });
+      toast.success("Netlify deployment started! Check status below.");
+      // Clear token for security
+      setNetlifyToken("");
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to start Netlify deployment");
+    } finally {
+      setIsDeploying(false);
+    }
+  };
+
+  const getNetlifyStatusIcon = (status) => {
+    switch (status) {
+      case "deploying":
+        return <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />;
+      case "deployed":
+        return <CheckCircle2 className="w-4 h-4 text-green-600" />;
+      case "failed":
+        return <XCircle className="w-4 h-4 text-red-600" />;
+      default:
+        return null;
+    }
+  };
+
   const getStatusIcon = (status) => {
     switch (status) {
       case "pending":
