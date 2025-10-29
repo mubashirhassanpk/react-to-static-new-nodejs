@@ -175,6 +175,70 @@ async def run_build_process(build_id: str, source_dir: Path):
         if source_dir.exists():
             shutil.rmtree(source_dir)
 
+# Netlify deployment background task
+async def deploy_to_netlify(build_id: str, netlify_token: str, netlify_site_id: str):
+    """Background task to deploy a completed build to Netlify"""
+    try:
+        # Update status to deploying
+        await db.builds.update_one(
+            {"id": build_id},
+            {"$set": {"netlify_deploy_status": "deploying"}}
+        )
+        
+        # Get build information
+        build = await db.builds.find_one({"id": build_id})
+        if not build:
+            raise Exception("Build not found")
+        
+        if build['status'] != 'completed':
+            raise Exception("Build must be completed before deploying to Netlify")
+        
+        # Find the build directory (preview directory)
+        preview_dir = BUILDS_DIR / build_id / "preview"
+        if not preview_dir.exists():
+            raise Exception("Build directory not found")
+        
+        # Create Netlify deployer instance
+        deployer = NetlifyDeployer(netlify_token)
+        
+        # Deploy to Netlify
+        logger.info(f"Starting Netlify deployment for build {build_id} to site {netlify_site_id}")
+        result = deployer.deploy_directory(netlify_site_id, str(preview_dir))
+        
+        # Update build with deployment information
+        await db.builds.update_one(
+            {"id": build_id},
+            {"$set": {
+                "netlify_deploy_id": result['deploy_id'],
+                "netlify_deploy_status": "deployed",
+                "netlify_deploy_url": result['url'],
+                "netlify_error_message": None
+            }}
+        )
+        
+        logger.info(f"Successfully deployed to Netlify: {result['url']}")
+        
+    except NetlifyDeploymentError as e:
+        error_msg = f"Netlify deployment error: {str(e)}"
+        logger.error(error_msg)
+        await db.builds.update_one(
+            {"id": build_id},
+            {"$set": {
+                "netlify_deploy_status": "failed",
+                "netlify_error_message": error_msg
+            }}
+        )
+    except Exception as e:
+        error_msg = f"Deployment failed: {str(e)}"
+        logger.error(error_msg)
+        await db.builds.update_one(
+            {"id": build_id},
+            {"$set": {
+                "netlify_deploy_status": "failed",
+                "netlify_error_message": error_msg
+            }}
+        )
+
 # Routes
 @api_router.get("/")
 async def root():
