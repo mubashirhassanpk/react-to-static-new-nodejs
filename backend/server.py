@@ -49,6 +49,12 @@ class Build(BaseModel):
     output_path: Optional[str] = None
     preview_url: Optional[str] = None
     error_message: Optional[str] = None
+    
+    # Netlify deployment fields
+    netlify_deploy_id: Optional[str] = None
+    netlify_deploy_status: Optional[str] = None  # "deploying", "deployed", "failed"
+    netlify_deploy_url: Optional[str] = None
+    netlify_error_message: Optional[str] = None
 
 class BuildCreate(BaseModel):
     input_type: str
