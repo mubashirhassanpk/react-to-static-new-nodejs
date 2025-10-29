@@ -251,6 +251,9 @@ frontend:
       - working: true
         agent: "main"
         comment: "Added Netlify deployment section to BuildDetails page. Users can input their Netlify token and site ID, initiate deployment, and see real-time status updates. Shows deployed URL when successful. Includes helpful instructions for obtaining Netlify credentials."
+      - working: true
+        agent: "main"
+        comment: "SIMPLIFIED UI: Removed mandatory Site ID field and made deployment much simpler. Now users only need to provide their Netlify token. Added optional Site Name field for custom naming. Updated instructions to reflect automatic site creation. Validation now only checks for token presence."
 
 metadata:
   created_by: "main_agent"
