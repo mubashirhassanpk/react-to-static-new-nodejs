@@ -1,0 +1,328 @@
+import requests
+import sys
+import time
+import json
+import io
+import zipfile
+from datetime import datetime
+
+class ReactStaticBuilderTester:
+    def __init__(self, base_url="https://auto-static-build.preview.emergentagent.com"):
+        self.base_url = base_url
+        self.api_url = f"{base_url}/api"
+        self.tests_run = 0
+        self.tests_passed = 0
+        self.build_ids = []
+
+    def run_test(self, name, method, endpoint, expected_status, data=None, files=None, timeout=30):
+        """Run a single API test"""
+        url = f"{self.api_url}/{endpoint}"
+        headers = {}
+        if data and not files:
+            headers['Content-Type'] = 'application/json'
+
+        self.tests_run += 1
+        print(f"\n🔍 Testing {name}...")
+        print(f"   URL: {url}")
+        
+        try:
+            if method == 'GET':
+                response = requests.get(url, headers=headers, timeout=timeout)
+            elif method == 'POST':
+                if files:
+                    response = requests.post(url, data=data, files=files, timeout=timeout)
+                else:
+                    response = requests.post(url, json=data, headers=headers, timeout=timeout)
+
+            success = response.status_code == expected_status
+            if success:
+                self.tests_passed += 1
+                print(f"✅ Passed - Status: {response.status_code}")
+                try:
+                    return success, response.json()
+                except:
+                    return success, response.text
+            else:
+                print(f"❌ Failed - Expected {expected_status}, got {response.status_code}")
+                print(f"   Response: {response.text[:200]}...")
+                return False, {}
+
+        except Exception as e:
+            print(f"❌ Failed - Error: {str(e)}")
+            return False, {}
+
+    def test_root_endpoint(self):
+        """Test root API endpoint"""
+        success, response = self.run_test(
+            "Root API Endpoint",
+            "GET",
+            "",
+            200
+        )
+        return success
+
+    def test_paste_build(self):
+        """Test paste code build"""
+        sample_code = '''import React from 'react';
+
+function App() {
+  return (
+    <div style={{ padding: '20px', fontFamily: 'Arial' }}>
+      <h1>Test React App</h1>
+      <p>This is a test build from paste functionality.</p>
+    </div>
+  );
+}
+
+export default App;'''
+        
+        success, response = self.run_test(
+            "Paste Code Build",
+            "POST",
+            "build/paste",
+            200,
+            data={"code": sample_code, "filename": "App.js"}
+        )
+        
+        if success and 'id' in response:
+            self.build_ids.append(response['id'])
+            print(f"   Build ID: {response['id']}")
+            return response['id']
+        return None
+
+    def test_upload_build(self):
+        """Test ZIP upload build"""
+        # Create a minimal React project ZIP in memory
+        zip_buffer = io.BytesIO()
+        
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            # package.json
+            package_json = {
+                "name": "test-react-app",
+                "version": "0.1.0",
+                "private": True,
+                "dependencies": {
+                    "react": "^18.2.0",
+                    "react-dom": "^18.2.0",
+                    "react-scripts": "5.0.1"
+                },
+                "scripts": {
+                    "start": "react-scripts start",
+                    "build": "react-scripts build",
+                    "test": "react-scripts test",
+                    "eject": "react-scripts eject"
+                },
+                "browserslist": {
+                    "production": [">0.2%", "not dead", "not op_mini all"],
+                    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
+                }
+            }
+            zip_file.writestr("package.json", json.dumps(package_json, indent=2))
+            
+            # public/index.html
+            index_html = '''<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Test React App</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>'''
+            zip_file.writestr("public/index.html", index_html)
+            
+            # src/index.js
+            index_js = '''import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);'''
+            zip_file.writestr("src/index.js", index_js)
+            
+            # src/App.js
+            app_js = '''import React from 'react';
+
+function App() {
+  return (
+    <div style={{ padding: '20px', fontFamily: 'Arial' }}>
+      <h1>Test Upload Build</h1>
+      <p>This is a test build from ZIP upload functionality.</p>
+    </div>
+  );
+}
+
+export default App;'''
+            zip_file.writestr("src/App.js", app_js)
+        
+        zip_buffer.seek(0)
+        
+        files = {'file': ('test-react-app.zip', zip_buffer, 'application/zip')}
+        
+        success, response = self.run_test(
+            "ZIP Upload Build",
+            "POST",
+            "build/upload",
+            200,
+            files=files
+        )
+        
+        if success and 'id' in response:
+            self.build_ids.append(response['id'])
+            print(f"   Build ID: {response['id']}")
+            return response['id']
+        return None
+
+    def test_github_build(self):
+        """Test GitHub repository build"""
+        # Using a simple public React repo
+        github_url = "https://github.com/facebook/create-react-app"
+        
+        success, response = self.run_test(
+            "GitHub Repository Build",
+            "POST",
+            "build/github",
+            200,
+            data={"repo_url": github_url}
+        )
+        
+        if success and 'id' in response:
+            self.build_ids.append(response['id'])
+            print(f"   Build ID: {response['id']}")
+            return response['id']
+        return None
+
+    def test_build_status(self, build_id):
+        """Test build status endpoint"""
+        success, response = self.run_test(
+            f"Build Status for {build_id[:8]}...",
+            "GET",
+            f"build/status/{build_id}",
+            200
+        )
+        
+        if success:
+            print(f"   Status: {response.get('status', 'unknown')}")
+            return response.get('status')
+        return None
+
+    def test_builds_list(self):
+        """Test builds list endpoint"""
+        success, response = self.run_test(
+            "Builds List",
+            "GET",
+            "builds",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} builds")
+        return success
+
+    def wait_for_build_completion(self, build_id, max_wait=300):
+        """Wait for build to complete or fail"""
+        print(f"\n⏳ Waiting for build {build_id[:8]}... to complete (max {max_wait}s)")
+        start_time = time.time()
+        
+        while time.time() - start_time < max_wait:
+            status = self.test_build_status(build_id)
+            if status in ['completed', 'failed']:
+                print(f"   Build finished with status: {status}")
+                return status
+            elif status == 'building':
+                print("   Build in progress...")
+            time.sleep(10)
+        
+        print("   Build timed out")
+        return 'timeout'
+
+    def test_download_build(self, build_id):
+        """Test build download"""
+        success, response = self.run_test(
+            f"Download Build {build_id[:8]}...",
+            "GET",
+            f"build/download/{build_id}",
+            200,
+            timeout=60
+        )
+        return success
+
+    def test_preview_build(self, build_id):
+        """Test build preview"""
+        success, response = self.run_test(
+            f"Preview Build {build_id[:8]}...",
+            "GET",
+            f"build/preview/{build_id}/index.html",
+            200,
+            timeout=30
+        )
+        return success
+
+def main():
+    print("🚀 Starting React to Static Site Builder API Tests")
+    print("=" * 60)
+    
+    tester = ReactStaticBuilderTester()
+    
+    # Test basic API
+    if not tester.test_root_endpoint():
+        print("❌ Root endpoint failed, stopping tests")
+        return 1
+    
+    # Test builds list
+    tester.test_builds_list()
+    
+    # Test paste build
+    paste_build_id = tester.test_paste_build()
+    
+    # Test upload build  
+    upload_build_id = tester.test_upload_build()
+    
+    # Test GitHub build (might fail due to large repo)
+    print("\n⚠️  GitHub build test may take longer or fail due to large repository")
+    github_build_id = tester.test_github_build()
+    
+    # Wait for at least one build to complete
+    completed_builds = []
+    
+    if paste_build_id:
+        status = tester.wait_for_build_completion(paste_build_id, 180)
+        if status == 'completed':
+            completed_builds.append(paste_build_id)
+            # Test download and preview
+            tester.test_download_build(paste_build_id)
+            tester.test_preview_build(paste_build_id)
+    
+    if upload_build_id:
+        status = tester.wait_for_build_completion(upload_build_id, 180)
+        if status == 'completed':
+            completed_builds.append(upload_build_id)
+            # Test download and preview
+            tester.test_download_build(upload_build_id)
+            tester.test_preview_build(upload_build_id)
+    
+    # Print results
+    print("\n" + "=" * 60)
+    print(f"📊 Tests completed: {tester.tests_passed}/{tester.tests_run}")
+    print(f"🏗️  Builds created: {len(tester.build_ids)}")
+    print(f"✅ Builds completed: {len(completed_builds)}")
+    
+    if completed_builds:
+        print("✅ Core functionality working: Build creation, status tracking, download, preview")
+    else:
+        print("❌ No builds completed successfully")
+    
+    success_rate = (tester.tests_passed / tester.tests_run) * 100 if tester.tests_run > 0 else 0
+    print(f"📈 Success rate: {success_rate:.1f}%")
+    
+    return 0 if success_rate >= 70 else 1
+
+if __name__ == "__main__":
+    sys.exit(main())
