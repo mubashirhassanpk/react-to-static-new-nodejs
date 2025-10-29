@@ -541,6 +541,12 @@ def main():
             print(f"\n🔧 Testing Netlify endpoints with completed build {paste_build_id[:8]}...")
             tester.test_build_status_includes_netlify_fields(paste_build_id)
             tester.test_netlify_status_existing_build(paste_build_id)
+            
+            # Test simplified deployment features
+            print(f"\n🆕 Testing Simplified Deployment with build {paste_build_id[:8]}...")
+            tester.test_netlify_deploy_token_only(paste_build_id)
+            tester.test_netlify_deploy_token_and_site_name(paste_build_id)
+            tester.test_netlify_deploy_missing_token(paste_build_id)
             tester.test_netlify_deploy_completed_build(paste_build_id)
         elif status in ['pending', 'building']:
             # Test deployment with non-completed build
