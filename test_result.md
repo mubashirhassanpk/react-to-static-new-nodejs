@@ -231,6 +231,18 @@ frontend:
         agent: "testing"
         comment: "Build details page sometimes redirects to home page instead of staying on build details URL (from iteration 2)"
 
+  - task: "Netlify deployment UI"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/BuildDetails.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added Netlify deployment section to BuildDetails page. Users can input their Netlify token and site ID, initiate deployment, and see real-time status updates. Shows deployed URL when successful. Includes helpful instructions for obtaining Netlify credentials."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
