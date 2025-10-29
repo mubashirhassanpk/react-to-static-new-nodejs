@@ -158,6 +158,18 @@ backend:
         agent: "main"
         comment: "Previously failed with 'Build directory not found after build' for Vite projects. Now fixed to support both build and dist directories."
 
+  - task: "Netlify deployment integration"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py, /app/backend/netlify_deployer.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Implemented multi-user Netlify deployment support. Users can provide their own Netlify tokens and site IDs. Uses File Digest method (recommended by Netlify) with automatic retry logic, async deployment support, and SHA1 hash-based file uploads. Added endpoints: POST /api/build/deploy-netlify/{build_id} and GET /api/build/netlify-status/{build_id}"
+
   - task: "Build status endpoint"
     implemented: true
     working: true
