@@ -139,12 +139,17 @@ export default App;`
           <div className="flex items-center justify-center gap-3 mb-4">
             <FileCode className="w-12 h-12 text-blue-500" />
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold gradient-text">
-              React to Static
+              Reactly
             </h1>
           </div>
-          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto mb-2">
             Convert your React projects to production-ready static sites automatically.
             Upload, paste, or connect your GitHub repo.
+          </p>
+          <p className="text-sm text-gray-500">
+            <a href="https://www.reactly.site" target="_blank" rel="noopener noreferrer" className="hover:text-blue-500 transition-colors">
+              www.reactly.site
+            </a>
           </p>
         </div>
 
