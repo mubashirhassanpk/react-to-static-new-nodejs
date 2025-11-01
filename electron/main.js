@@ -213,7 +213,7 @@ function createTray() {
   
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'React Static Builder',
+      label: 'Reactly',
       enabled: false
     },
     {
