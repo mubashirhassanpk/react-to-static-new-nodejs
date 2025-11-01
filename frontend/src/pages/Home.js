@@ -311,6 +311,38 @@ export default App;`
             </TabsContent>
           </Tabs>
         </Card>
+
+        {/* Footer */}
+        <div className="text-center mt-12 text-sm text-gray-500">
+          <p className="mb-2">
+            Developed by{" "}
+            <a 
+              href="https://www.mubashirhassan.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-blue-500 hover:text-blue-600 transition-colors font-medium"
+            >
+              Mubashir Hassan
+            </a>
+          </p>
+          <p className="flex items-center justify-center gap-4 flex-wrap">
+            <a 
+              href="mailto:hello@mubashirhassan.com" 
+              className="hover:text-blue-500 transition-colors"
+            >
+              hello@mubashirhassan.com
+            </a>
+            <span className="text-gray-400">•</span>
+            <a 
+              href="https://wa.me/923222047786" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="hover:text-blue-500 transition-colors"
+            >
+              WhatsApp: +92 322 2047786
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );
