@@ -8,9 +8,9 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { getApiUrl } from "@/utils/backend";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+const API = getApiUrl();
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState(null);
