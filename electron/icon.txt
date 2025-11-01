@@ -1,0 +1,3 @@
+Placeholder for icon.png
+In production, you should add a proper 256x256 PNG icon here
+For now, the app will work without it but may show a default icon
