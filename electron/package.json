@@ -1,0 +1,70 @@
+{
+  "name": "react-static-builder-desktop",
+  "version": "1.0.0",
+  "description": "React to Static Site Builder - Desktop Application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win",
+    "build:dir": "electron-builder --win --dir"
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.8.4",
+    "find-process": "^1.4.7"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.reactstaticbuilder.app",
+    "productName": "React Static Builder",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "icon.png",
+      "python/**/*",
+      "frontend/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "React Static Builder"
+    },
+    "extraResources": [
+      {
+        "from": "../backend",
+        "to": "python",
+        "filter": [
+          "**/*",
+          "!**/__pycache__",
+          "!**/*.pyc",
+          "!.env",
+          "!builds/**"
+        ]
+      },
+      {
+        "from": "../frontend/build",
+        "to": "frontend"
+      }
+    ]
+  }
+}
