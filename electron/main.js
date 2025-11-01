@@ -272,7 +272,7 @@ function createTray() {
     }
   ]);
   
-  tray.setToolTip('React Static Builder');
+  tray.setToolTip('Reactly - React to Static Site Builder');
   tray.setContextMenu(contextMenu);
   
   tray.on('double-click', () => {
