@@ -1,14 +1,15 @@
 {
-  "name": "react-static-builder-desktop",
+  "name": "reactly-desktop",
   "version": "1.0.0",
-  "description": "React to Static Site Builder - Desktop Application",
+  "description": "Reactly - React to Static Site Builder Desktop Application",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder --win",
     "build:dir": "electron-builder --win --dir"
   },
-  "author": "Your Name",
+  "author": "Mubashir Hassan <hello@mubashirhassan.com> (https://www.mubashirhassan.com)",
+  "homepage": "https://www.reactly.site",
   "license": "MIT",
   "dependencies": {
     "axios": "^1.8.4",
