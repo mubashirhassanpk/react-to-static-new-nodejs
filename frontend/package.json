@@ -1,6 +1,9 @@
 {
-  "name": "frontend",
-  "version": "0.1.0",
+  "name": "reactly-frontend",
+  "version": "1.0.0",
+  "description": "Reactly - React to Static Site Builder Frontend",
+  "author": "Mubashir Hassan <hello@mubashirhassan.com> (https://www.mubashirhassan.com)",
+  "homepage": "https://www.reactly.site",
   "private": true,
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
