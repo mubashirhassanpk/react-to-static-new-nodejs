@@ -20,8 +20,8 @@
     "electron-builder": "^24.9.1"
   },
   "build": {
-    "appId": "com.reactstaticbuilder.app",
-    "productName": "React Static Builder",
+    "appId": "com.reactly.app",
+    "productName": "Reactly",
     "directories": {
       "output": "dist"
     },
