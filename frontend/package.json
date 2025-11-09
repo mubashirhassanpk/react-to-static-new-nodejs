@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Reactly - React to Static Site Builder Frontend",
   "author": "Mubashir Hassan <hello@mubashirhassan.com> (https://www.mubashirhassan.com)",
-  "homepage": "https://www.reactly.site",
+  "homepage": ".",
   "private": true,
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
