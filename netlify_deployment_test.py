@@ -9,7 +9,7 @@ import json
 import sys
 
 class NetlifyDeploymentTester:
-    def __init__(self, base_url="https://portable-installer.preview.emergentagent.com"):
+    def __init__(self, base_url="https://app-runner-44.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
