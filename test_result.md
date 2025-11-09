@@ -317,6 +317,18 @@ frontend:
       - working: true
         agent: "main"
         comment: "SIMPLIFIED UI: Removed mandatory Site ID field and made deployment much simpler. Now users only need to provide their Netlify token. Added optional Site Name field for custom naming. Updated instructions to reflect automatic site creation. Validation now only checks for token presence."
+  
+  - task: "Display detected framework type in build details"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/BuildDetails.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Added framework name display to the Status Card in BuildDetails page. Shows the detected framework (e.g., 'Next.js', 'Vite + React', 'Angular', 'Nuxt.js') alongside Input Type and Created At fields."
 
 metadata:
   created_by: "main_agent"
