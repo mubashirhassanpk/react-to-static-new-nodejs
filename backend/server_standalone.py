@@ -26,6 +26,7 @@ import sys
 from json_storage import JSONStorage, BuildsCollection
 from port_utils import find_available_port, get_backend_url
 from netlify_deployer import NetlifyDeployer, NetlifyDeploymentError
+from project_detector import ProjectDetector, ProjectType
 
 ROOT_DIR = Path(__file__).parent
 
