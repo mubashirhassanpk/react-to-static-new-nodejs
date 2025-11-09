@@ -45,7 +45,7 @@ async def create_completed_build():
 
 def test_netlify_deployment(build_id):
     """Test all Netlify deployment scenarios with a completed build"""
-    base_url = "https://react-toolkit-1.preview.emergentagent.com"
+    base_url = "https://js-framework-boost.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     tests = []
