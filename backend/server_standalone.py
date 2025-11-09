@@ -113,8 +113,50 @@ async def run_build_process(build_id: str, source_dir: Path):
         if not package_json.exists():
             raise Exception("No package.json found in the project")
         
+        # Detect project type
+        logs += "\n🔍 Detecting project type...\n"
+        await db.builds.update_one({"id": build_id}, {"$set": {"build_logs": logs}})
+        
+        project_type, build_info = ProjectDetector.detect_project_type(source_dir)
+        
+        if project_type == ProjectType.UNKNOWN:
+            error_detail = build_info.get('error', 'Unknown project type')
+            raise Exception(f"Unable to build project: {error_detail}")
+        
+        framework_name = build_info.get('framework_name', 'Unknown')
+        logs += f"✅ Detected: {framework_name} ({project_type})\n"
+        
+        # Update build with project type info
+        await db.builds.update_one(
+            {"id": build_id},
+            {"$set": {
+                "build_logs": logs,
+                "project_type": project_type,
+                "framework_name": framework_name
+            }}
+        )
+        
+        # Handle framework-specific configuration
+        if build_info.get('requires_config'):
+            logs += f"\n⚙️  Configuring {framework_name} for static build...\n"
+            await db.builds.update_one({"id": build_id}, {"$set": {"build_logs": logs}})
+            
+            if project_type == ProjectType.NEXTJS:
+                success, message = ProjectDetector.configure_nextjs_static_export(source_dir)
+                logs += f"   {message}\n"
+                if not success:
+                    logger.warning(f"Next.js config warning: {message}")
+            
+            elif project_type == ProjectType.NUXT:
+                success, message = ProjectDetector.configure_nuxt_static_generation(source_dir)
+                logs += f"   {message}\n"
+                if not success:
+                    logger.warning(f"Nuxt config warning: {message}")
+            
+            await db.builds.update_one({"id": build_id}, {"$set": {"build_logs": logs}})
+        
         # Run yarn install
-        logs += "\nRunning yarn install...\n"
+        logs += "\n📦 Running yarn install...\n"
         await db.builds.update_one({"id": build_id}, {"$set": {"build_logs": logs}})
         
         process = await asyncio.create_subprocess_exec(
@@ -124,44 +166,85 @@ async def run_build_process(build_id: str, source_dir: Path):
             stderr=asyncio.subprocess.PIPE
         )
         stdout, stderr = await process.communicate()
-        logs += stdout.decode() + stderr.decode()
+        install_output = stdout.decode() + stderr.decode()
+        
+        # Only include last 50 lines of install output to keep logs readable
+        install_lines = install_output.split('\n')
+        if len(install_lines) > 50:
+            logs += "   ... (output truncated) ...\n"
+            logs += '\n'.join(install_lines[-50:])
+        else:
+            logs += install_output
+        
         await db.builds.update_one({"id": build_id}, {"$set": {"build_logs": logs}})
         
         if process.returncode != 0:
             raise Exception(f"yarn install failed: {stderr.decode()}")
         
-        # Run yarn build
-        logs += "\n\nRunning yarn build...\n"
+        # Run build command
+        build_command = build_info.get('build_command', 'build')
+        logs += f"\n🔨 Running build command: yarn {build_command}...\n"
         await db.builds.update_one({"id": build_id}, {"$set": {"build_logs": logs}})
         
-        process = await asyncio.create_subprocess_exec(
-            "yarn", "build",
-            cwd=str(source_dir),
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
+        # For commands with spaces (like "ng build --configuration production"), split them
+        if ' ' in build_command and not build_command.startswith('yarn '):
+            # Use yarn to run the full command
+            process = await asyncio.create_subprocess_shell(
+                f"yarn {build_command}",
+                cwd=str(source_dir),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+        else:
+            # Simple command, use yarn
+            process = await asyncio.create_subprocess_exec(
+                "yarn", build_command if not build_command.startswith('yarn ') else build_command.replace('yarn ', ''),
+                cwd=str(source_dir),
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+        
         stdout, stderr = await process.communicate()
-        logs += stdout.decode() + stderr.decode()
+        build_output = stdout.decode() + stderr.decode()
+        
+        # Only include last 100 lines of build output
+        build_lines = build_output.split('\n')
+        if len(build_lines) > 100:
+            logs += "   ... (output truncated) ...\n"
+            logs += '\n'.join(build_lines[-100:])
+        else:
+            logs += build_output
+        
         await db.builds.update_one({"id": build_id}, {"$set": {"build_logs": logs}})
         
         if process.returncode != 0:
-            raise Exception(f"yarn build failed: {stderr.decode()}")
+            raise Exception(f"Build command failed: {stderr.decode()}")
         
-        # Check if build directory exists (support both CRA's "build" and Vite's "dist")
-        build_dir = source_dir / "build"
-        if not build_dir.exists():
-            build_dir = source_dir / "dist"
-            if not build_dir.exists():
-                # List available directories to help debug
-                available_dirs = [d.name for d in source_dir.iterdir() if d.is_dir()]
-                raise Exception(f"Build directory not found after build. Available directories: {', '.join(available_dirs)}")
+        # Find the build output directory
+        logs += f"\n📂 Looking for build output...\n"
+        await db.builds.update_one({"id": build_id}, {"$set": {"build_logs": logs}})
+        
+        possible_output_dirs = build_info.get('output_dirs', ['build', 'dist', 'out'])
+        build_dir = ProjectDetector.find_build_output(source_dir, possible_output_dirs)
+        
+        if not build_dir:
+            # List available directories to help debug
+            available_dirs = [d.name for d in source_dir.iterdir() if d.is_dir() and not d.name.startswith('.')]
+            raise Exception(
+                f"Build output directory not found after build.\n"
+                f"Expected one of: {', '.join(possible_output_dirs)}\n"
+                f"Available directories: {', '.join(available_dirs)}"
+            )
+        
+        logs += f"✅ Found build output at: {build_dir.name}/\n"
+        await db.builds.update_one({"id": build_id}, {"$set": {"build_logs": logs}})
         
         # Create ZIP file
         output_dir = BUILDS_DIR / build_id
         output_dir.mkdir(exist_ok=True)
         zip_path = output_dir / "build.zip"
         
-        logs += "\n\nCreating ZIP file...\n"
+        logs += "\n📦 Creating ZIP file...\n"
         await db.builds.update_one({"id": build_id}, {"$set": {"build_logs": logs}})
         
         shutil.make_archive(str(output_dir / "build"), 'zip', build_dir)
@@ -172,7 +255,11 @@ async def run_build_process(build_id: str, source_dir: Path):
             shutil.rmtree(preview_dir)
         shutil.copytree(build_dir, preview_dir)
         
-        logs += "\n\nBuild completed successfully!\n"
+        logs += "\n✅ Build completed successfully!\n"
+        logs += f"\n📊 Summary:\n"
+        logs += f"   Framework: {framework_name}\n"
+        logs += f"   Output: {build_dir.name}/\n"
+        logs += f"   Size: {sum(f.stat().st_size for f in build_dir.rglob('*') if f.is_file()) / 1024:.1f} KB\n"
         
         # Update build status
         await db.builds.update_one(
@@ -187,7 +274,7 @@ async def run_build_process(build_id: str, source_dir: Path):
         
     except Exception as e:
         error_msg = str(e)
-        logs += f"\n\nBuild failed: {error_msg}\n"
+        logs += f"\n\n❌ Build failed: {error_msg}\n"
         await db.builds.update_one(
             {"id": build_id},
             {"$set": {
