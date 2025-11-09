@@ -134,6 +134,54 @@ backend:
         agent: "main"
         comment: "Fixed build directory detection to check for both 'build' (CRA) and 'dist' (Vite) directories. Added helpful error message listing available directories if neither is found."
 
+  - task: "Multi-framework detection and support (Next.js, Vue, Nuxt, Svelte, Angular)"
+    implemented: true
+    working: true
+    file: "/app/backend/project_detector.py, /app/backend/server_standalone.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Created comprehensive ProjectDetector module that identifies 10+ framework types: Next.js, Nuxt, SvelteKit, Angular, Vue CLI, Vite (React/Svelte/Vue), Create React App, and generic Node.js projects. Each framework has specific build commands and output directory configurations."
+  
+  - task: "Next.js static export auto-configuration"
+    implemented: true
+    working: true
+    file: "/app/backend/project_detector.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Implemented automatic Next.js configuration for static export. Supports both next.config.js (CommonJS) and next.config.mjs (ES Modules). Automatically adds 'output: export' and 'images: { unoptimized: true }' if missing. Creates new config file if none exists."
+  
+  - task: "Nuxt.js static generation configuration"
+    implemented: true
+    working: true
+    file: "/app/backend/project_detector.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Implemented Nuxt configuration for static site generation. Adds 'ssr: false' and 'target: static' to nuxt.config.js/ts if not present."
+  
+  - task: "Build output directory detection for multiple frameworks"
+    implemented: true
+    working: true
+    file: "/app/backend/project_detector.py, /app/backend/server_standalone.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "Enhanced build output detection to support framework-specific directories: CRA (build/), Vite (dist/), Next.js (out/), Nuxt (.output/public/ or dist/), SvelteKit (build/), Angular (dist/[project-name]/). System now searches in priority order and provides helpful error messages listing available directories if build output not found."
+
   - task: "Upload ZIP file endpoint"
     implemented: true
     working: true
