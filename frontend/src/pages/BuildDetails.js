@@ -195,11 +195,17 @@ export default function BuildDetails() {
               </div>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
             <div>
               <p className="text-gray-500">Input Type</p>
               <p className="font-semibold capitalize">{build.input_type}</p>
             </div>
+            {build.framework_name && (
+              <div>
+                <p className="text-gray-500">Framework</p>
+                <p className="font-semibold">{build.framework_name}</p>
+              </div>
+            )}
             <div>
               <p className="text-gray-500">Created At</p>
               <p className="font-semibold">
