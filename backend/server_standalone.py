@@ -70,6 +70,10 @@ class Build(BaseModel):
     preview_url: Optional[str] = None
     error_message: Optional[str] = None
     
+    # Project type detection
+    project_type: Optional[str] = None  # "nextjs", "create-react-app", "vite-react", "nuxt", "angular", etc.
+    framework_name: Optional[str] = None  # Human-readable framework name
+    
     # Netlify deployment fields
     netlify_deploy_id: Optional[str] = None
     netlify_site_id: Optional[str] = None
