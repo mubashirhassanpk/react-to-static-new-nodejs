@@ -103,11 +103,23 @@
 #====================================================================================================
 
 user_problem_statement: |
-  React to Static Site Builder application that allows users to:
-  - Upload ZIP files containing React projects
+  Static Site Builder application that allows users to:
+  - Upload ZIP files containing frontend projects
   - Paste React code directly
   - Clone GitHub repositories
   Then build them into static sites and provide download/preview functionality.
+  
+  **Phase 2 Enhancement (Current):**
+  Added multi-framework support including:
+  - Next.js with automatic static export configuration
+  - Vue.js (Vue CLI)
+  - Nuxt.js with static generation
+  - SvelteKit with adapter-static
+  - Svelte with Vite
+  - Angular projects
+  - Generic Node.js projects with build scripts
+  
+  The system now automatically detects project type and configures builds accordingly.
 
 backend:
   - task: "Support both Create React App (build) and Vite (dist) output directories"
