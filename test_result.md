@@ -338,7 +338,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Netlify deployment UI (frontend testing needed)"
+    - "Multi-framework detection and support"
+    - "Next.js static export auto-configuration"
+    - "Build output directory detection for multiple frameworks"
+    - "Display detected framework type in build details"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
