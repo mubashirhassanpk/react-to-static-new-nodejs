@@ -142,14 +142,9 @@ export default App;`
               Reactly
             </h1>
           </div>
-          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto mb-2">
+          <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto">
             Convert your React projects to production-ready static sites automatically.
             Upload, paste, or connect your GitHub repo.
-          </p>
-          <p className="text-sm text-gray-500">
-            <a href="https://www.reactly.site" target="_blank" rel="noopener noreferrer" className="hover:text-blue-500 transition-colors">
-              www.reactly.site
-            </a>
           </p>
         </div>
 
